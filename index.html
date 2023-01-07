@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Адмін панель</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #aeccff;
+        }
+        p {
+            margin: 0;
+        }
+
+        .buttons {
+            margin: 0;
+            padding-top: 3vw;
+            position: fixed;
+            background-color: #aeccff;
+            height: 94vh;
+            width: 12vw;
+            display: flex;
+            flex-direction: column;
+        }
+        .charts-col {
+            display: flex;
+            flex-direction: row;
+        }
+        .time-button {
+            margin: 0 1vw 1vw 1vw;
+            height: 2.5vw;
+            font-size: 1.25vw;
+            font-family: "Fira Sans", sans-serif;
+            background-color: #fafafa;
+            border: 0.15vw solid #b4b4b4;
+            border-radius: 0.5vw;
+        }
+        .time-button:hover {
+            background-color: #dadef1;
+        }
+        .content {
+            margin-left: 12vw;
+            width: 76vw;
+            height: 90vw;
+            background-color: #e9f0f3;
+            border-left: 0.5vw solid #26519b;
+            border-right: 0.5vw solid #26519b;
+        }
+        .title {
+            padding-top: 2vw;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            font-size: 2vw;
+            font-family: "Arial Black", monospace;
+            font-weight: 900;
+            text-align: center;
+        }
+
+        .info-square {
+            stroke-width: 0.15vw;
+            stroke: #26519b;
+        }
+
+        .info-square-title {
+            font-size: 1.75vw;
+            font-weight: 900;
+            font-family: "Roboto", monospace;
+            stroke: #26519b;
+            stroke-width: 0.025vw;
+        }
+
+        .info-square-text {
+            font-size: 2.5vw;
+            font-weight: 900;
+            font-family: "Roboto", monospace;
+            stroke: #f5f5f5;
+            stroke-width: 0.025vw;
+        }
+
+        .info-square-subtext {
+            font-size: 1.75vw;
+            font-weight: 900;
+            font-family: "Roboto", monospace;
+            stroke: #bd690f;
+            stroke-width: 0.01vw;
+        }
+
+        .axis-text {
+            font-size: 0.6vw;
+            color: #03112a;
+            stroke-width: 0.075vw;
+        }
+
+        .axis-title {
+            font-size: 0.9vw;
+            color: #03112a;
+            font-weight: 900;
+            stroke-width: 0.075vw;
+        }
+
+        .chart-info-text {
+            font-size: 0.75vw;
+            color: #010e25;
+            font-family: "Fira Sans Medium", serif;
+            font-weight: 900;
+            stroke: #7280c7;
+            stroke-width: 0.005vw;
+        }
+
+    </style>
+</head>
+<body>
+<script src="lib/d3.js"></script>
+<main>
+    <div class="buttons">
+        <button class="time-button" onclick="update('Month')">Місяць</button>
+        <button class="time-button" onclick="update('Year')">Рік</button>
+    </div>
+    <div class="content">
+        <div class="title">
+            <p>Статистика</p>
+        </div>
+        <div class="info-squares">
+
+        </div>
+        <div class="charts-col">
+            <div id="revenue-chart">
+
+            </div>
+            <div id="sales-reviews-chart">
+
+            </div>
+        </div>
+        <div class="charts-col">
+            <div id="sales-returns-chart">
+
+            </div>
+            <div id="reviews-returns-chart">
+
+            </div>
+        </div>
+    </div>
+</main>
+<script>
+    //Info squares init
+    const infoSquares = d3.select(".info-squares")
+        .append("svg")
+        .attr("width", 1500)
+        .attr("height", 400).append("g");
+
+    const rectXStart = 75;
+    const rectXMargin = 340;
+    const rectY = 75;
+    const rectRound = 10;
+    const rectSize = 280;
+
+    const rectCount = 4;
+
+    const rectTitles = ["Дохід", "Продано", "Повернуто", "Користувачі"];
+
+    const infoSquareTexts = [];
+    const infoSquareSubTexts = [];
+
+    for (let rectNumber = 0; rectNumber < rectCount; rectNumber++) {
+        infoSquares.append("rect")
+            .attr("x", rectXStart + rectXMargin * rectNumber)
+            .attr("y", rectY)
+            .attr("ry", rectRound)
+            .attr("ry", rectRound)
+            .attr("width", rectSize)
+            .attr("height", rectSize)
+            .attr("fill", "#aeccff")
+            .attr("class", "info-square");
+
+        infoSquares.append("text")
+            .attr("x", rectXStart + rectXMargin * rectNumber + rectSize / 2)
+            .attr("y", rectY + 50)
+            .attr("dominant-baseline", "middle")
+            .attr("text-anchor", "middle")
+            .attr("class", "info-square-title")
+            .attr("fill", "#000000")
+            .text(rectTitles[rectNumber]);
+
+        infoSquareTexts[rectNumber] = infoSquares.append("text")
+            .attr("x", rectXStart + rectXMargin * rectNumber + rectSize / 2)
+            .attr("y", rectY + rectSize / 2)
+            .attr("dominant-baseline", "middle")
+            .attr("text-anchor", "middle")
+            .attr("class", "info-square-text")
+            .attr("fill", "#000000");
+
+        infoSquareSubTexts[rectNumber] = infoSquares.append("text")
+            .attr("x", rectXStart + rectXMargin * rectNumber + rectSize / 2)
+            .attr("y", rectY + 210)
+            .attr("dominant-baseline", "middle")
+            .attr("text-anchor", "middle")
+            .attr("class", "info-square-subtext")
+            .attr("fill", "#000000");
+    }
+
+    //Charts margins init
+    const firstColumnMargin = {top: 80, right: 75, bottom: 60, left: 125},
+        firstColumnChartWidth = 750 - firstColumnMargin.left - firstColumnMargin.right,
+        firstColumnChartHeight = 550 - firstColumnMargin.top - firstColumnMargin.bottom;
+
+    const secondColumnMargin = {top: 80, right: 140, bottom: 60, left: 60},
+        secondColumnChartWidth = 750 - secondColumnMargin.left - secondColumnMargin.right,
+        secondColumnChartHeight = 550 - secondColumnMargin.top - secondColumnMargin.bottom;
+
+    //Line chart init
+    const lineChartSvg = d3.select("#revenue-chart")
+        .append("svg")
+        .attr("width", firstColumnChartWidth + firstColumnMargin.left + firstColumnMargin.right)
+        .attr("height", firstColumnChartHeight + firstColumnMargin.top + firstColumnMargin.bottom)
+        .append("g")
+        .attr("transform", `translate(${firstColumnMargin.left},${firstColumnMargin.top})`);
+
+    lineChartSvg.append("rect")
+        .attr("x", -50)
+        .attr("y", -20)
+        .attr("rx", 15)
+        .attr("ry", 15)
+        .attr("width", firstColumnChartWidth + 70)
+        .attr("height", firstColumnChartHeight + 50)
+        .attr("fill", "#ffffff")
+        .attr("stroke", "#3f5494")
+        .attr("stroke-width", 2);
+
+    lineChartSvg.append("text")
+        .attr("x", firstColumnChartWidth / 2 - 25)
+        .attr("y", -50)
+        .attr("dominant-baseline", "middle")
+        .attr("text-anchor", "middle")
+        .attr("class", "info-square-title")
+        .attr("fill", "#000000")
+        .text("Дохід");
+
+    lineChartSvg.append("text")
+        .attr("x", 30)
+        .attr("y", 0)
+        .attr("dominant-baseline", "middle")
+        .attr("text-anchor", "middle")
+        .attr("class", "axis-title")
+        .attr("fill", "#000000")
+        .text("Дохід");
+
+    lineChartSvg.append("text")
+        .attr("x", firstColumnChartWidth - 20)
+        .attr("y", firstColumnChartHeight - 10)
+        .attr("dominant-baseline", "middle")
+        .attr("text-anchor", "middle")
+        .attr("class", "axis-title")
+        .attr("fill", "#000000")
+        .text("День");
+
+    const axisX = lineChartSvg.append("g")
+        .attr("transform", `translate(0, ${firstColumnChartHeight})`);
+
+    const axisY = lineChartSvg.append("g");
+
+    const path = lineChartSvg.append("path");
+
+    const chartDataRect1 = lineChartSvg.append("rect")
+        .attr("width", 80)
+        .attr("height", 50)
+        .attr("fill", "#bdd6ff")
+        .attr("stroke", "#13154b")
+        .attr("stroke-width", 2)
+        .attr("opacity", 0);
+
+    const currentDate1 = lineChartSvg.append("text")
+        .attr("class", "chart-info-text")
+        .attr("dominant-baseline", "middle")
+        .attr("text-anchor", "middle");
+
+    const currentValue1 = lineChartSvg.append("text")
+        .attr("class", "chart-info-text")
+        .attr("dominant-baseline", "middle")
+        .attr("text-anchor", "middle");
+
+    //Sales and reviews chart init
+    const salesReviewsSvg = d3.select("#sales-reviews-chart")
+        .append("svg")
+        .attr("width", secondColumnChartWidth + secondColumnMargin.left + secondColumnMargin.right)
+        .attr("height", secondColumnChartHeight + secondColumnMargin.top + secondColumnMargin.bottom)
+        .append("g")
+        .attr("transform", `translate(${secondColumnMargin.left},${secondColumnMargin.top})`);
+
+    salesReviewsSvg.append("rect")
+        .attr("x", -50)
+        .attr("y", -20)
+        .attr("rx", 15)
+        .attr("ry", 15)
+        .attr("width", secondColumnChartWidth + 70)
+        .attr("height", secondColumnChartHeight + 50)
+        .attr("fill", "#ffffff")
+        .attr("stroke", "#3f5494")
+        .attr("stroke-width", 2);
+
+    salesReviewsSvg.append("text")
+        .attr("x", secondColumnChartWidth / 2 - 25)
+        .attr("y", -50)
+        .attr("dominant-baseline", "middle")
+        .attr("text-anchor", "middle")
+        .attr("class", "info-square-title")
+        .attr("fill", "#000000")
+        .text("Покупки / відгуки");
+
+    const salesReviewsSubgroups = ["sales", "reviews"];
+
+    const x2 = d3.scaleBand();
+    const axisX2 = salesReviewsSvg.append("g");
+
+    const y2 = d3.scaleLinear();
+    const axisY2 = salesReviewsSvg.append("g");
+
+    const bars = salesReviewsSvg.append("g");
+
+    const chartDataRect2 = salesReviewsSvg.append("rect")
+        .attr("width", 80)
+        .attr("height", 50)
+        .attr("fill", "#bdd6ff")
+        .attr("stroke", "#13154b")
+        .attr("stroke-width", 2)
+        .attr("opacity", 0);
+
+    const currentDate2 = salesReviewsSvg.append("text")
+        .attr("class", "chart-info-text")
+        .attr("dominant-baseline", "middle")
+        .attr("text-anchor", "middle");
+
+    const currentValue2 = salesReviewsSvg.append("text")
+        .attr("class", "chart-info-text")
+        .attr("dominant-baseline", "middle")
+        .attr("text-anchor", "middle");
+
+    //Sales and returns chart init
+    const salesReturnsSvg = d3.select("#sales-returns-chart")
+        .append("svg")
+        .attr("width", firstColumnChartWidth + firstColumnMargin.left + firstColumnMargin.right)
+        .attr("height", firstColumnChartHeight + firstColumnMargin.top + firstColumnMargin.bottom)
+        .append("g")
+        .attr("transform", `translate(${firstColumnMargin.left},${firstColumnMargin.top})`);
+
+    salesReturnsSvg.append("rect")
+        .attr("x", -50)
+        .attr("y", -20)
+        .attr("rx", 15)
+        .attr("ry", 15)
+        .attr("width", firstColumnChartWidth + 70)
+        .attr("height", firstColumnChartHeight + 50)
+        .attr("fill", "#ffffff")
+        .attr("stroke", "#3f5494")
+        .attr("stroke-width", 2);
+
+    salesReturnsSvg.append("text")
+        .attr("x", firstColumnChartWidth / 2 - 25)
+        .attr("y", -50)
+        .attr("dominant-baseline", "middle")
+        .attr("text-anchor", "middle")
+        .attr("class", "info-square-title")
+        .attr("fill", "#000000")
+        .text("Покупки / повернення");
+
+    const salesReturnsSubgroups = ["sales", "returns"];
+
+    const x3 = d3.scaleBand();
+    const axisX3 = salesReturnsSvg.append("g");
+
+    const y3 = d3.scaleLinear();
+    const axisY3 = salesReturnsSvg.append("g");
+
+    const bars2 = salesReturnsSvg.append("g");
+
+    const chartDataRect3 = salesReturnsSvg.append("rect")
+        .attr("width", 80)
+        .attr("height", 50)
+        .attr("fill", "#bdd6ff")
+        .attr("stroke", "#13154b")
+        .attr("stroke-width", 2)
+        .attr("opacity", 0);
+
+    const currentDate3 = salesReturnsSvg.append("text")
+        .attr("class", "chart-info-text")
+        .attr("dominant-baseline", "middle")
+        .attr("text-anchor", "middle");
+
+    const currentValue3 = salesReturnsSvg.append("text")
+        .attr("class", "chart-info-text")
+        .attr("dominant-baseline", "middle")
+        .attr("text-anchor", "middle");
+
+    //Reviews and Returns chart init
+    const reviewsReturnsSvg = d3.select("#reviews-returns-chart")
+        .append("svg")
+        .attr("width", secondColumnChartWidth + secondColumnMargin.left + secondColumnMargin.right)
+        .attr("height", secondColumnChartHeight + secondColumnMargin.top + secondColumnMargin.bottom)
+        .append("g")
+        .attr("transform", `translate(${secondColumnMargin.left},${secondColumnMargin.top})`);
+
+    reviewsReturnsSvg.append("rect")
+        .attr("x", -50)
+        .attr("y", -20)
+        .attr("rx", 15)
+        .attr("ry", 15)
+        .attr("width", secondColumnChartWidth + 70)
+        .attr("height", secondColumnChartHeight + 50)
+        .attr("fill", "#ffffff")
+        .attr("stroke", "#3f5494")
+        .attr("stroke-width", 2);
+
+    reviewsReturnsSvg.append("text")
+        .attr("x", secondColumnChartWidth / 2 - 25)
+        .attr("y", -50)
+        .attr("dominant-baseline", "middle")
+        .attr("text-anchor", "middle")
+        .attr("class", "info-square-title")
+        .attr("fill", "#000000")
+        .text("Покупки / повернення");
+
+    const reviewsReturnsSubgroups = ["reviews", "returns"];
+
+    const x4 = d3.scaleBand();
+    const axisX4 = reviewsReturnsSvg.append("g");
+
+    const y4 = d3.scaleLinear();
+    const axisY4 = reviewsReturnsSvg.append("g");
+
+    const bars3 = reviewsReturnsSvg.append("g");
+
+    const chartDataRect4 = reviewsReturnsSvg.append("rect")
+        .attr("width", 80)
+        .attr("height", 50)
+        .attr("fill", "#bdd6ff")
+        .attr("stroke", "#13154b")
+        .attr("stroke-width", 2)
+        .attr("opacity", 0);
+
+    const currentDate4 = reviewsReturnsSvg.append("text")
+        .attr("class", "chart-info-text")
+        .attr("dominant-baseline", "middle")
+        .attr("text-anchor", "middle");
+
+    const currentValue4 = reviewsReturnsSvg.append("text")
+        .attr("class", "chart-info-text")
+        .attr("dominant-baseline", "middle")
+        .attr("text-anchor", "middle");
+
+    //Updating data
+    function update(period) {
+        d3.selectAll(".line-chart-info-rect").remove();
+
+        let timeFormat = "";
+        let showTimeFormat = "";
+
+        d3.json("data/data.json").then(function (data) {
+            if (period === "Month") {
+                currentData = data.month;
+                timeFormat = "%Y-%m-%d";
+                showTimeFormat = "%d.%m";
+            }
+            else {
+                currentData = data.year;
+                timeFormat = "%Y-%m";
+                showTimeFormat = "%m.%Y";
+            }
+
+            //Info squares
+            const rectTexts = [ "$" + data.revenue_total, data.sales_total, data.returns_total, data.users_total];
+
+            const revenue = currentData.revenue;
+            const sales = currentData.sales;
+            const returns = currentData.returns;
+            const users = currentData.users;
+
+            const rectTextsAdditions = [
+                "(" + (revenue >= 0 ? "+" + revenue : revenue) + ")",
+                "(" + (sales >= 0 ? "+" + sales : sales) + ")",
+                "(" + (returns >= 0 ? "+" + returns : returns) + ")",
+                "(" + (users >= 0 ? "+" + users : users) + ")"
+            ];
+
+            for (let rectNumber = 0; rectNumber < rectCount; rectNumber++) {
+                infoSquareTexts[rectNumber].text(rectTexts[rectNumber]);
+                infoSquareSubTexts[rectNumber].text(rectTextsAdditions[rectNumber]);
+            }
+
+            // Line chart
+            const x = d3.scaleTime()
+                .domain(d3.extent(currentData.changes, function(d) { return d3.timeParse(timeFormat)(d.date); }))
+                .range([ 0, firstColumnChartWidth ]);
+            axisX
+                .call(d3.axisBottom(x).tickFormat(d3.timeFormat(showTimeFormat)))
+                .attr("stroke-width", 2)
+                .attr("class", "axis-text");
+
+            const salesMax = d3.max(currentData.changes, function(d) { return +d.revenue; });
+            const yMax = salesMax * 1.2;
+
+            const salesMin = d3.min(currentData.changes, function(d) { return +d.revenue; });
+            const yMin = salesMin * 0.8;
+
+            const y = d3.scaleLinear()
+                .domain([yMin, yMax])
+                .range([ firstColumnChartHeight, 0 ]);
+            axisY
+                .call(d3.axisLeft(y))
+                .attr("stroke-width", 2)
+                .attr("class", "axis-text");
+
+            path
+                .datum(currentData.changes)
+                .attr("fill", "none")
+                .attr("stroke", "steelblue")
+                .attr("stroke-width", 3)
+                .transition()
+                .duration(1000)
+                .attr("d", d3.line()
+                    .x(function(d) { return x(d3.timeParse(timeFormat)(d.date)) })
+                    .y(function(d) { return y(+d.revenue) })
+                );
+
+            lineChartSvg
+                .selectAll("info")
+                .data(currentData.changes)
+                .join("rect")
+                .attr("width", 100)
+                .attr("height", 100)
+                .attr("x", function(d) { return x(d3.timeParse(timeFormat)(d.date)) -50 })
+                .attr("y", function(d) { return y(+d.revenue) - 50 })
+                .attr("opacity", 0)
+                .on("mouseover", function(e, d) {
+                    currentDate1
+                        .attr("x", x(d3.timeParse(timeFormat)(d.date)) + 15)
+                        .attr("y", y(+d.revenue) - 40)
+                        .attr("opacity", 1)
+                        .text(d.date);
+                    currentValue1
+                        .attr("x", x(d3.timeParse(timeFormat)(d.date)) + 15)
+                        .attr("y", y(+d.revenue) - 20)
+                        .attr("opacity", 1)
+                        .text(d.revenue);
+                    chartDataRect1
+                        .attr("x", x(d3.timeParse(timeFormat)(d.date)) - 25)
+                        .attr("y", y(+d.revenue) - 55)
+                        .attr("opacity", 1);
+                })
+                .on("mouseout", function(e, d) {
+                    currentDate1.attr("opacity", 0);
+                    currentValue1.attr("opacity", 0);
+                    chartDataRect1.attr("opacity", 0);
+                });
+
+            //Sales and reviews chart
+            const salesReviewsGroups =  currentData.changes.map(d => (d3.timeParse(timeFormat))(d.date));
+
+            x2
+                .domain(salesReviewsGroups)
+                .range([0, secondColumnChartWidth])
+                .padding([0.25])
+            axisX2
+                .attr("transform", `translate(0, ${secondColumnChartHeight})`)
+                .call(d3.axisBottom(x2).tickSizeOuter(0).tickFormat(d3.timeFormat(showTimeFormat)))
+                .attr("class", "axis-text");
+
+            y2
+                .domain([0, (d3.max(currentData.changes, function(d) { return +d.sales; }) + d3.max(currentData.changes, function(d) { return +d.reviews; })) * 1.2])
+                .range([ secondColumnChartHeight, 0 ]);
+            axisY2
+                .call(d3.axisLeft(y2))
+                .attr("class", "axis-text");
+
+            const color = d3.scaleOrdinal()
+                .domain(salesReviewsSubgroups)
+                .range(['#2a5ebd','#74acda']);
+
+            const stackedData = d3.stack()
+                .keys(salesReviewsSubgroups)
+                (currentData.changes);
+
+            bars
+                .selectAll("g")
+                .data(stackedData)
+                .join("g")
+                .attr("fill", d => color(d.key))
+                .selectAll("rect")
+                .data(d => d)
+                .join("rect")
+                .attr("x", d => x2(d3.timeParse(timeFormat)(d.data.date)))
+                .attr("y", d => y2(d[1]))
+                .attr("width",x2.bandwidth())
+                .attr("height", d => y2(d[0]) - y2(d[1]))
+                .attr("opacity", 0)
+                .on("mouseover", function(e, d) {
+                    currentDate2
+                        .attr("x", x2(d3.timeParse(timeFormat)(d.data.date)) + 30)
+                        .attr("y", y2(d[1]) - 35)
+                        .attr("opacity", 1)
+                        .text("sal: " + d.data.sales);
+                    currentValue2
+                        .attr("x", x2(d3.timeParse(timeFormat)(d.data.date)) + 30)
+                        .attr("y", y2(d[1]) - 15)
+                        .attr("opacity", 1)
+                        .text("rev: " + d.data.reviews);
+                    chartDataRect2
+                        .attr("x", x2(d3.timeParse(timeFormat)(d.data.date)) - 7.5)
+                        .attr("y", y2(d[1]) - 50)
+                        .attr("opacity", 1);
+                })
+                .on("mouseout", function(e, d) {
+                    currentDate2.attr("opacity", 0);
+                    currentValue2.attr("opacity", 0);
+                    chartDataRect2.attr("opacity", 0);
+                })
+                .transition()
+                .duration(1000)
+                .attr("opacity", 1);
+
+            // sales and returns chart
+            const salesReturnsGroups =  currentData.changes.map(d => (d3.timeParse(timeFormat))(d.date));
+
+            x3
+                .domain(salesReturnsGroups)
+                .range([0,firstColumnChartWidth])
+                .padding([0.25]);
+            axisX3
+                .attr("transform", `translate(0, ${firstColumnChartHeight})`)
+                .call(d3.axisBottom(x3).tickSizeOuter(0).tickFormat(d3.timeFormat(showTimeFormat)))
+                .attr("class", "axis-text");
+
+            y3
+                .domain([0, (d3.max(currentData.changes, function(d) { return +d.sales; }) + d3.max(currentData.changes, function(d) { return +d.returns; })) * 1.2])
+                .range([ firstColumnChartHeight, 0 ]);
+            axisY3
+                .call(d3.axisLeft(y3))
+                .attr("class", "axis-text");
+
+            const color2 = d3.scaleOrdinal()
+                .domain(salesReturnsSubgroups)
+                .range(['#de5151','#e39494']);
+
+            const stackedData2 = d3.stack()
+                .keys(salesReturnsSubgroups)
+                (currentData.changes);
+
+            bars2
+                .selectAll("g")
+                .data(stackedData2)
+                .join("g")
+                .attr("fill", d => color2(d.key))
+                .selectAll("rect")
+                .data(d => d)
+                .join("rect")
+                .attr("x", d => x3(d3.timeParse(timeFormat)(d.data.date)))
+                .attr("y", d => y3(d[1]))
+                .attr("width",x3.bandwidth())
+                .attr("height", d => y3(d[0]) - y3(d[1]))
+                .attr("opacity", 0)
+                .on("mouseover", function(e, d) {
+                    currentDate3
+                        .attr("x", x3(d3.timeParse(timeFormat)(d.data.date)) + 30)
+                        .attr("y", y3(d[1]) - 35)
+                        .attr("opacity", 1)
+                        .text("sal: " + d.data.sales);
+                    currentValue3
+                        .attr("x", x3(d3.timeParse(timeFormat)(d.data.date)) + 30)
+                        .attr("y", y3(d[1]) - 15)
+                        .attr("opacity", 1)
+                        .text("ret: " + d.data.returns);
+                    chartDataRect3
+                        .attr("x", x3(d3.timeParse(timeFormat)(d.data.date)) - 7.5)
+                        .attr("y", y3(d[1]) - 50)
+                        .attr("opacity", 1);
+                })
+                .on("mouseout", function(e, d) {
+                    currentDate3.attr("opacity", 0);
+                    currentValue3.attr("opacity", 0);
+                    chartDataRect3.attr("opacity", 0);
+                })
+                .transition()
+                .duration(1000)
+                .attr("opacity", 1);
+
+            // reviews and returns chart
+            const reviewsReturnsGroups =  currentData.changes.map(d => (d3.timeParse(timeFormat))(d.date));
+
+            x4
+                .domain(reviewsReturnsGroups)
+                .range([0,secondColumnChartWidth])
+                .padding([0.25]);
+            axisX4
+                .attr("transform", `translate(0, ${secondColumnChartHeight})`)
+                .call(d3.axisBottom(x4).tickSizeOuter(0).tickFormat(d3.timeFormat(showTimeFormat)))
+                .attr("class", "axis-text");
+
+            y4
+                .domain([0, (d3.max(currentData.changes, function(d) { return +d.reviews; }) + d3.max(currentData.changes, function(d) { return +d.returns; })) * 1.2])
+                .range([ secondColumnChartHeight, 0 ]);
+            axisY4
+                .call(d3.axisLeft(y4))
+                .attr("class", "axis-text");
+
+            const color3 = d3.scaleOrdinal()
+                .domain(reviewsReturnsSubgroups)
+                .range(['#2c8115','#95da90']);
+
+            const stackedData3 = d3.stack()
+                .keys(reviewsReturnsSubgroups)
+                (currentData.changes);
+
+            bars3
+                .selectAll("g")
+                .data(stackedData3)
+                .join("g")
+                .attr("fill", d => color3(d.key))
+                .selectAll("rect")
+                .data(d => d)
+                .join("rect")
+                .attr("x", d => x4(d3.timeParse(timeFormat)(d.data.date)))
+                .attr("y", d => y4(d[1]))
+                .attr("width",x4.bandwidth())
+                .attr("height", d => y4(d[0]) - y4(d[1]))
+                .attr("opacity", 0)
+                .on("mouseover", function(e, d) {
+                    currentDate4
+                        .attr("x", x4(d3.timeParse(timeFormat)(d.data.date)) + 30)
+                        .attr("y", y4(d[1]) - 35)
+                        .attr("opacity", 1)
+                        .text("rev: " + d.data.reviews);
+                    currentValue4
+                        .attr("x", x4(d3.timeParse(timeFormat)(d.data.date)) + 30)
+                        .attr("y", y4(d[1]) - 15)
+                        .attr("opacity", 1)
+                        .text("ret: " + d.data.returns);
+                    chartDataRect4
+                        .attr("x", x4(d3.timeParse(timeFormat)(d.data.date)) - 7.5)
+                        .attr("y", y4(d[1]) - 50)
+                        .attr("opacity", 1);
+                })
+                .on("mouseout", function(e, d) {
+                    currentDate4.attr("opacity", 0);
+                    currentValue4.attr("opacity", 0);
+                    chartDataRect4.attr("opacity", 0);
+                })
+                .transition()
+                .duration(1000)
+                .attr("opacity", 1);
+        });
+    }
+
+    update("Month");
+</script>
+</body>
+</html>

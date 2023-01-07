@@ -1,0 +1,108 @@
+{
+  "users_total": 3456,
+  "sales_total": 10343,
+  "revenue_total": 3245230,
+  "returns_total": 457,
+  "month": {
+    "users": 107,
+    "sales": 589,
+    "revenue": 187480,
+    "reviews": 76,
+    "returns": 15,
+    "changes": [
+      {
+        "date": "2022-12-01",
+        "sales": 19,
+        "revenue": 5800,
+        "reviews": 2,
+        "returns": 1
+      },
+      {
+        "date": "2022-12-06",
+        "sales": 17,
+        "revenue": 5400,
+        "reviews": 1,
+        "returns": 0
+      },
+      {
+        "date": "2022-12-11",
+        "sales": 18,
+        "revenue": 6100,
+        "reviews": 2,
+        "returns": 1
+      },
+      {
+        "date": "2022-12-16",
+        "sales": 20,
+        "revenue": 4900,
+        "reviews": 3,
+        "returns": 1
+      },
+      {
+        "date": "2022-12-21",
+        "sales": 22,
+        "revenue": 5800,
+        "reviews": 1,
+        "returns": 0
+      },
+      {
+        "date": "2022-12-26",
+        "sales": 23,
+        "revenue": 6100,
+        "reviews": 2,
+        "returns": 1
+      }
+    ]
+  },
+  "year": {
+    "users": 1124,
+    "sales": 6248,
+    "revenue": 1686960,
+    "reviews": 839,
+    "returns": 167,
+    "changes": [
+      {
+        "date": "2022-01",
+        "sales": 511,
+        "revenue": 144700,
+        "reviews": 59,
+        "returns": 15
+      },
+      {
+        "date": "2022-03",
+        "sales": 532,
+        "revenue": 156200,
+        "reviews": 66,
+        "returns": 16
+      },
+      {
+        "date": "2022-05",
+        "sales": 524,
+        "revenue": 122800,
+        "reviews": 62,
+        "returns": 13
+      },
+      {
+        "date": "2022-07",
+        "sales": 548,
+        "revenue": 161400,
+        "reviews": 71,
+        "returns": 14
+      },
+      {
+        "date": "2022-09",
+        "sales": 573,
+        "revenue": 174900,
+        "reviews": 68,
+        "returns": 15
+      },
+      {
+        "date": "2022-11",
+        "sales": 556,
+        "revenue": 171800,
+        "reviews": 73,
+        "returns": 14
+      }
+    ]
+  }
+}
